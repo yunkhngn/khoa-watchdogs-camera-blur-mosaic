@@ -34,6 +34,88 @@ class MainWindow(QMainWindow):
         self._setup_ui()
         self._connect_signals()
         self._try_load_model()
+        self._apply_theme()
+
+    def _apply_theme(self):
+        # A modern, flat dark theme inspired by Discord/Spotify
+        style = """
+        QMainWindow, QWidget {
+            background-color: #121212;
+            color: #E0E0E0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            font-size: 13px;
+        }
+        QGroupBox {
+            border: 1px solid #333333;
+            border-radius: 8px;
+            margin-top: 1ex;
+            background-color: #1E1E1E;
+        }
+        QGroupBox::title {
+            subcontrol-origin: margin;
+            subcontrol-position: top left;
+            padding: 0 5px;
+            color: #888888;
+            font-weight: bold;
+            font-size: 12px;
+            text-transform: uppercase;
+        }
+        QPushButton {
+            background-color: #2D2D2D;
+            border: 1px solid #3E3E3E;
+            border-radius: 6px;
+            padding: 6px 12px;
+            color: #FFFFFF;
+            font-weight: 500;
+        }
+        QPushButton:hover {
+            background-color: #383838;
+            border: 1px solid #555555;
+        }
+        QPushButton:pressed {
+            background-color: #1A1A1A;
+        }
+        QPushButton#primaryBtn {
+            background-color: #4CAF50;
+            color: #000000;
+            border: none;
+            font-weight: bold;
+        }
+        QPushButton#primaryBtn:hover {
+            background-color: #45a049;
+        }
+        QComboBox {
+            background-color: #2D2D2D;
+            border: 1px solid #3E3E3E;
+            border-radius: 4px;
+            padding: 4px 8px;
+            color: #FFFFFF;
+        }
+        QComboBox::drop-down {
+            border: none;
+        }
+        QSlider::groove:horizontal {
+            border: 1px solid #333333;
+            height: 6px;
+            background: #2D2D2D;
+            border-radius: 3px;
+        }
+        QSlider::handle:horizontal {
+            background: #4CAF50;
+            border: 2px solid #2D2D2D;
+            width: 14px;
+            height: 14px;
+            margin: -5px 0;
+            border-radius: 9px;
+        }
+        QSlider::handle:horizontal:hover {
+            background: #66BB6A;
+        }
+        QLabel {
+            background-color: transparent;
+        }
+        """
+        self.setStyleSheet(style)
 
     def _setup_ui(self):
         central = QWidget()

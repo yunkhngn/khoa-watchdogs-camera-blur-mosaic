@@ -1,5 +1,6 @@
 from typing import List, Optional
 
+import cv2
 import numpy as np
 
 from core.face_encoder import load_encodings
@@ -29,8 +30,18 @@ class Pipeline:
         self.mosaic_block_size: int = 15
         self.use_segmentation: bool = True  # False = bbox mode
 
+        # --- Performance: face detection cache ---
+        self._frame_count: int = 0
+        self._face_detect_interval: int = 5  # Run face detection every N frames
+        self._cached_face_locs: list = []    # Cache matched face locations
+        self._face_scale: float = 0.5        # Downscale factor for face detection
+        self._has_match: bool = False         # Whether we found a match recently
+
     def process_frame(self, frame: np.ndarray) -> np.ndarray:
         """Process a single frame: detect faces, match, blur matched persons.
+
+        Optimized: face detection runs every N frames on a downscaled image,
+        while person segmentation runs every frame for smooth tracking.
 
         Args:
             frame: BGR image as numpy array.
@@ -38,24 +49,26 @@ class Pipeline:
         Returns:
             Processed frame with mosaic applied to matched persons.
         """
-        # Step 1: Find faces matching the known encodings
-        matched_face_locs = find_matching_faces(
-            frame, self.known_encodings, tolerance=self.face_tolerance
-        )
+        self._frame_count += 1
 
-        if not matched_face_locs:
+        # Step 1: Run face detection periodically (it's the slow part)
+        if self._frame_count % self._face_detect_interval == 1 or not self._has_match:
+            self._update_face_cache(frame)
+
+        # If no matched face, return frame immediately (fast path)
+        if not self._has_match:
             return frame
 
-        # Step 2: Detect all persons with YOLOv8-seg
+        # Step 2: Detect all persons with YOLOv8-seg (runs every frame, it's fast)
         person_detections = self.detector.detect(frame, confidence=self.yolo_confidence)
 
         if not person_detections:
             return frame
 
-        # Step 3: Match faces to person detections and apply mosaic
+        # Step 3: Match cached face locations to person detections and apply mosaic
         result = frame
         for detection in person_detections:
-            if self._face_in_person(matched_face_locs, detection):
+            if self._face_in_person(self._cached_face_locs, detection):
                 if self.use_segmentation:
                     result = apply_mosaic_to_mask(
                         result, detection.mask, self.mosaic_block_size
@@ -66,6 +79,30 @@ class Pipeline:
                     )
 
         return result
+
+    def _update_face_cache(self, frame: np.ndarray) -> None:
+        """Run face detection on a downscaled frame and cache results."""
+        h, w = frame.shape[:2]
+        scale = self._face_scale
+
+        # Downscale for faster face detection
+        small = cv2.resize(frame, (int(w * scale), int(h * scale)))
+
+        matched_face_locs_small = find_matching_faces(
+            small, self.known_encodings, tolerance=self.face_tolerance
+        )
+
+        if matched_face_locs_small:
+            # Scale face locations back to original frame size
+            inv = 1.0 / scale
+            self._cached_face_locs = [
+                (int(top * inv), int(right * inv), int(bottom * inv), int(left * inv))
+                for top, right, bottom, left in matched_face_locs_small
+            ]
+            self._has_match = True
+        else:
+            self._cached_face_locs = []
+            self._has_match = False
 
     def _face_in_person(
         self,

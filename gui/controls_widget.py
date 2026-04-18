@@ -31,9 +31,9 @@ class ControlsWidget(QWidget):
         input_group = QGroupBox("Input")
         input_layout = QVBoxLayout(input_group)
 
-        self.btn_image = QPushButton("📷 Open Image")
-        self.btn_video = QPushButton("🎬 Open Video")
-        self.btn_webcam = QPushButton("�� Start Webcam")
+        self.btn_image = QPushButton("Open Image")
+        self.btn_video = QPushButton("Open Video")
+        self.btn_webcam = QPushButton("Start Webcam")
 
         self.btn_image.clicked.connect(self.open_image_clicked.emit)
         self.btn_video.clicked.connect(self.open_video_clicked.emit)
@@ -98,9 +98,9 @@ class ControlsWidget(QWidget):
         actions_group = QGroupBox("Actions")
         actions_layout = QHBoxLayout(actions_group)
 
-        self.btn_save = QPushButton("💾 Save Image")
-        self.btn_export = QPushButton("💾 Export Video")
-        self.btn_stop = QPushButton("⏹ Stop")
+        self.btn_save = QPushButton("Save Image")
+        self.btn_export = QPushButton("Export Video")
+        self.btn_stop = QPushButton("Stop")
 
         self.btn_save.clicked.connect(self.save_image_clicked.emit)
         self.btn_export.clicked.connect(self.export_video_clicked.emit)
@@ -116,7 +116,8 @@ class ControlsWidget(QWidget):
         model_group = QGroupBox("Face Model")
         model_layout = QHBoxLayout(model_group)
         self.model_label = QLabel("No model loaded")
-        self.btn_reencode = QPushButton("🔄 Re-encode")
+        self.btn_reencode = QPushButton("Re-encode Face Model")
+        self.btn_reencode.setObjectName("primaryBtn")
         model_layout.addWidget(self.model_label)
         model_layout.addWidget(self.btn_reencode)
         layout.addWidget(model_group)
