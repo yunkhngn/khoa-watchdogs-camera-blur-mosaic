@@ -6,7 +6,7 @@ import numpy as np
 from core.face_encoder import load_encodings
 from core.face_matcher import find_matching_faces
 from core.person_detector import PersonDetector, PersonDetection
-from core.mosaic import apply_mosaic_to_bbox, apply_mosaic_to_mask
+from core.mosaic import apply_mosaic_to_bbox, apply_mosaic_to_mask, draw_hacker_box
 
 
 class Pipeline:
@@ -77,6 +77,9 @@ class Pipeline:
                     result = apply_mosaic_to_bbox(
                         result, detection.bbox, self.mosaic_block_size
                     )
+                
+                # Hacker cyberpunk overlay!
+                draw_hacker_box(result, detection.bbox)
 
         return result
 

@@ -242,11 +242,12 @@ class MainWindow(QMainWindow):
         if not src:
             return
         os.makedirs(OUTPUT_DIR, exist_ok=True)
-        dst, _ = QFileDialog.getSaveFileName(
-            self, "Export To", os.path.join(OUTPUT_DIR, "output.mp4"), "Video (*.mp4)"
-        )
-        if not dst:
-            return
+        
+        # Auto-generate destination filename like: output_file_name_exported.mp4
+        base_name = os.path.basename(src)
+        name, ext = os.path.splitext(base_name)
+        dst = os.path.join(OUTPUT_DIR, f"{name}_exported.mp4")
+
         self._stop_worker()
         self.worker = VideoWorker(src, self.pipeline)
         self.worker.export_path = dst
