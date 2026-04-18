@@ -142,6 +142,7 @@ class MainWindow(QMainWindow):
         self.controls.mosaic_size_changed.connect(self._on_mosaic_size)
         self.controls.confidence_changed.connect(self._on_confidence)
         self.controls.face_tolerance_changed.connect(self._on_face_tolerance)
+        self.controls.grayscale_changed.connect(self._on_grayscale)
 
     def _try_load_model(self):
         if os.path.isfile(DEFAULT_MODEL):
@@ -305,6 +306,10 @@ class MainWindow(QMainWindow):
     def _on_face_tolerance(self, tol: float):
         if self.pipeline:
             self.pipeline.face_tolerance = tol
+
+    def _on_grayscale(self, state: bool):
+        if self.pipeline:
+            self.pipeline.grayscale_cam = state
 
     def closeEvent(self, event):
         self._stop_worker()

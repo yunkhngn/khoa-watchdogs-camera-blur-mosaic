@@ -21,6 +21,7 @@ class ControlsWidget(QWidget):
     mosaic_size_changed = pyqtSignal(int)
     confidence_changed = pyqtSignal(float)
     face_tolerance_changed = pyqtSignal(float)
+    grayscale_changed = pyqtSignal(bool)
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -91,6 +92,14 @@ class ControlsWidget(QWidget):
                 self.face_tolerance_changed.emit(v / 100),
             )
         )
+
+        from PyQt6.QtWidgets import QCheckBox
+        self.grayscale_cb = QCheckBox("Grayscale Camera Filter")
+        self.grayscale_cb.setChecked(True)
+        self.grayscale_cb.stateChanged.connect(
+            lambda state: self.grayscale_changed.emit(bool(state))
+        )
+        settings_layout.addWidget(self.grayscale_cb)
 
         layout.addWidget(settings_group)
 

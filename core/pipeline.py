@@ -30,6 +30,7 @@ class Pipeline:
         self.yolo_confidence: float = 0.5
         self.mosaic_block_size: int = 15
         self.use_segmentation: bool = True  # False = bbox mode
+        self.grayscale_cam: bool = True     # True = B&W camera view
 
         # --- Performance: face detection cache ---
         self._frame_count: int = 0
@@ -50,6 +51,10 @@ class Pipeline:
         Returns:
             Processed frame with mosaic applied to matched persons.
         """
+        if self.grayscale_cam:
+            gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+            frame = cv2.cvtColor(gray, cv2.COLOR_GRAY2BGR)
+            
         self._frame_count += 1
         result = frame
 
