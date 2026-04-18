@@ -6,7 +6,7 @@ import numpy as np
 from core.face_encoder import load_encodings
 from core.face_matcher import find_matching_faces
 from core.person_detector import PersonDetector, PersonDetection
-from core.mosaic import apply_mosaic_to_bbox, apply_mosaic_to_mask, draw_hacker_box
+from core.mosaic import apply_mosaic_to_bbox, apply_mosaic_to_mask, draw_hacker_box, draw_human_box
 from core.camera_overlay import apply_cctv_overlay
 
 
@@ -62,24 +62,28 @@ class Pipeline:
         if self._frame_count % self._face_detect_interval == 1 or not self._has_match:
             self._update_face_cache(frame)
 
-        # Step 2: Detect persons and apply effects if there's a match
-        if self._has_match:
-            person_detections = self.detector.detect(frame, confidence=self.yolo_confidence)
-            
-            if person_detections:
-                for detection in person_detections:
-                    if self._face_in_person(self._cached_face_locs, detection):
-                        if self.use_segmentation:
-                            result = apply_mosaic_to_mask(
-                                result, detection.mask, self.mosaic_block_size
-                            )
-                        else:
-                            result = apply_mosaic_to_bbox(
-                                result, detection.bbox, self.mosaic_block_size
-                            )
-                        
-                        # Hacker cyberpunk overlay!
-                        draw_hacker_box(result, detection.bbox)
+        # Step 2: Detect ALL persons and apply corresponding effects
+        person_detections = self.detector.detect(frame, confidence=self.yolo_confidence)
+        
+        if person_detections:
+            for detection in person_detections:
+                is_target = self._has_match and self._face_in_person(self._cached_face_locs, detection)
+                
+                if is_target:
+                    if self.use_segmentation:
+                        result = apply_mosaic_to_mask(
+                            result, detection.mask, self.mosaic_block_size
+                        )
+                    else:
+                        result = apply_mosaic_to_bbox(
+                            result, detection.bbox, self.mosaic_block_size
+                        )
+                    
+                    # Hacker cyberpunk overlay
+                    draw_hacker_box(result, detection.bbox)
+                else:
+                    # Normal human overlay
+                    draw_human_box(result, detection.bbox)
 
         # Step 3: Apply global CCTV camera style overlay to EVERY frame
         result = apply_cctv_overlay(result)

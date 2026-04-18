@@ -87,6 +87,22 @@ def draw_hacker_box(frame: np.ndarray, bbox: Tuple[int, int, int, int]) -> None:
         cv2.circle(frame, (x1 + tw + 20, txt_y - th // 2), 4, color_red, cv2.FILLED)
 
 
+def draw_human_box(frame: np.ndarray, bbox: Tuple[int, int, int, int]) -> None:
+    """Draw a basic gray bounding box indicating a 'HUMAN'."""
+    x1, y1, x2, y2 = bbox
+    color_gray = (170, 170, 170)
+    
+    cv2.rectangle(frame, (x1, y1), (x2, y2), color_gray, 2)
+
+    text = "HUMAN"
+    font = cv2.FONT_HERSHEY_SIMPLEX
+    font_scale = 0.5
+    (tw, th), _ = cv2.getTextSize(text, font, font_scale, 1)
+    
+    txt_y = max(y1 - 10, th + 10)
+    cv2.rectangle(frame, (x1, txt_y - th - 5), (x1 + tw + 10, txt_y + 5), (50, 50, 50), cv2.FILLED)
+    cv2.putText(frame, text, (x1 + 5, txt_y), font, font_scale, color_gray, 1, cv2.LINE_AA)
+
 def apply_mosaic_to_bbox(
     frame: np.ndarray,
     bbox: Tuple[int, int, int, int],
