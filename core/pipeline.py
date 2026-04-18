@@ -7,6 +7,7 @@ from core.face_encoder import load_encodings
 from core.face_matcher import find_matching_faces
 from core.person_detector import PersonDetector, PersonDetection
 from core.mosaic import apply_mosaic_to_bbox, apply_mosaic_to_mask, draw_hacker_box
+from core.camera_overlay import apply_cctv_overlay
 
 
 class Pipeline:
@@ -50,37 +51,34 @@ class Pipeline:
             Processed frame with mosaic applied to matched persons.
         """
         self._frame_count += 1
+        result = frame
 
         # Step 1: Run face detection periodically (it's the slow part)
         if self._frame_count % self._face_detect_interval == 1 or not self._has_match:
             self._update_face_cache(frame)
 
-        # If no matched face, return frame immediately (fast path)
-        if not self._has_match:
-            return frame
+        # Step 2: Detect persons and apply effects if there's a match
+        if self._has_match:
+            person_detections = self.detector.detect(frame, confidence=self.yolo_confidence)
+            
+            if person_detections:
+                for detection in person_detections:
+                    if self._face_in_person(self._cached_face_locs, detection):
+                        if self.use_segmentation:
+                            result = apply_mosaic_to_mask(
+                                result, detection.mask, self.mosaic_block_size
+                            )
+                        else:
+                            result = apply_mosaic_to_bbox(
+                                result, detection.bbox, self.mosaic_block_size
+                            )
+                        
+                        # Hacker cyberpunk overlay!
+                        draw_hacker_box(result, detection.bbox)
 
-        # Step 2: Detect all persons with YOLOv8-seg (runs every frame, it's fast)
-        person_detections = self.detector.detect(frame, confidence=self.yolo_confidence)
-
-        if not person_detections:
-            return frame
-
-        # Step 3: Match cached face locations to person detections and apply mosaic
-        result = frame
-        for detection in person_detections:
-            if self._face_in_person(self._cached_face_locs, detection):
-                if self.use_segmentation:
-                    result = apply_mosaic_to_mask(
-                        result, detection.mask, self.mosaic_block_size
-                    )
-                else:
-                    result = apply_mosaic_to_bbox(
-                        result, detection.bbox, self.mosaic_block_size
-                    )
-                
-                # Hacker cyberpunk overlay!
-                draw_hacker_box(result, detection.bbox)
-
+        # Step 3: Apply global CCTV camera style overlay to EVERY frame
+        result = apply_cctv_overlay(result)
+        
         return result
 
     def _update_face_cache(self, frame: np.ndarray) -> None:
