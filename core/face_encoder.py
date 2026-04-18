@@ -20,7 +20,13 @@ def encode_faces_from_folder(folder_path: str) -> List[np.ndarray]:
             continue
 
         filepath = os.path.join(folder_path, filename)
-        image = face_recognition.load_image_file(filepath)
+        
+        # Use PIL to read and automatically fix EXIF rotation
+        from PIL import Image, ImageOps
+        img = Image.open(filepath).convert("RGB")
+        img_exif = ImageOps.exif_transpose(img)
+        image = np.array(img_exif)
+        
         face_encs = face_recognition.face_encodings(image)
 
         if face_encs:
